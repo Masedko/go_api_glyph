@@ -3,60 +3,70 @@
   "user_name": "想像力상상력想像力—— —— —",
   "user_steamID": 76561198392036633,
   "minute": 9,
-  "second": 27
+  "second": 27,
+  "heroId": 13
  },
  {
   "user_name": ":)",
   "user_steamID": 76561198090224486,
   "minute": 9,
-  "second": 32
+  "second": 32,
+  "heroId": 43
  },
  {
   "user_name": "Довольный",
   "user_steamID": 76561198073597242,
   "minute": 12,
-  "second": 46
+  "second": 46,
+  "heroId": 66
  },
  {
   "user_name": "皮球",
   "user_steamID": 76561198143644474,
   "minute": 16,
-  "second": 30
+  "second": 30,
+  "heroId": 110
  },
  {
   "user_name": "Довольный",
   "user_steamID": 76561198073597242,
   "minute": 20,
-  "second": 46
+  "second": 46,
+  "heroId": 66
  },
  {
   "user_name": "皮球",
   "user_steamID": 76561198143644474,
   "minute": 20,
-  "second": 47
+  "second": 47,
+  "heroId": 110
  },
  {
   "user_name": "皮球",
   "user_steamID": 76561198143644474,
   "minute": 20,
-  "second": 47
+  "second": 47,
+  "heroId": 110
  },
  {
   "user_name": "皮球",
   "user_steamID": 76561198143644474,
   "minute": 25,
-  "second": 50
+  "second": 50,
+  "heroId": 110
  },
  {
   "user_name": "me sleeping",
   "user_steamID": 76561198262479756,
   "minute": 25,
-  "second": 55
+  "second": 55,
+  "heroId": 15
  },
  {
   "user_name": "皮球",
   "user_steamID": 76561198143644474,
   "minute": 39,
-  "second": 51
+  "second": 51,
+  "heroId": 110
  }
 ]

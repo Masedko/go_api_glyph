@@ -17,6 +17,7 @@ import (
 	valid "github.com/asaskevich/govalidator"
 	"github.com/dotabuff/manta"
 	"github.com/dotabuff/manta/dota"
+	"github.com/rs/cors"
 	"github.com/swaggest/rest/response/gzip"
 	"github.com/swaggest/rest/web"
 	"github.com/swaggest/swgui/v4emb"
@@ -25,10 +26,16 @@ import (
 )
 
 type Glyph struct {
-	User_name    string `json:"user_name"`
-	User_steamID uint64 `json:"user_steamID"`
+	User_name    string `json:"user_name" description:"Username (not current)"`
+	User_steamID uint64 `json:"user_steamID" description:"Steam64 ID"`
 	Minute       uint32 `json:"minute" minimum:"0" maximum:"60" description:"Minute when glyph was used"`
 	Second       uint32 `json:"second" minimum:"0" maximum:"60" description:"Second when glyph was used"`
+	HeroID       uint64 `json:"heroId" description:"ID of hero (https://liquipedia.net/dota2/MediaWiki:Dota2webapi-heroes.json)"`
+}
+
+type HeroPlayer struct {
+	Hero_ID   int64
+	Player_ID int64
 }
 
 type Match struct {
@@ -42,12 +49,13 @@ func main() {
 
 	s.OpenAPI.Info.Title = "Glyph by MatchID API"
 	s.OpenAPI.Info.WithDescription("This service provides API to get glyph usage in Dota 2 match based on match_id")
-	s.OpenAPI.Info.Version = "v0.2.0"
+	s.OpenAPI.Info.Version = "v0.2.1"
 
 	// Setup middlewares.
 	s.Wrap(
-		gzip.Middleware, // Response compression with support for direct gzip pass through.
+		gzip.Middleware,
 	)
+	s.Use(cors.AllowAll().Handler)
 
 	s.Get("/matches/{id}", getGlyphsByID())
 
@@ -116,9 +124,14 @@ func ParseDemo(filename string, match_id string) []Glyph {
 	if err != nil {
 		log.Fatalf("unable to create parser: %s", err)
 	}
+
 	gameStartTime := 0.0
 	gameCurrentTime := 0.0
 	var glyphs []Glyph
+	var heroplayers []HeroPlayer
+	for i := 0; i < 10; i++ {
+		heroplayers = append(heroplayers, HeroPlayer{})
+	}
 
 	p.Callbacks.OnCDOTAUserMsg_SpectatorPlayerUnitOrders(func(m *dota.CDOTAUserMsg_SpectatorPlayerUnitOrders) error {
 		if m.GetOrderType() == int32(dota.DotaunitorderT_DOTA_UNIT_ORDER_GLYPH) {
@@ -139,19 +152,31 @@ func ParseDemo(filename string, match_id string) []Glyph {
 			gameStartTime, err = strconv.ParseFloat(fmt.Sprint(e.Map()["m_pGameRules.m_flGameStartTime"]), 64)
 			gameCurrentTime, err = strconv.ParseFloat(fmt.Sprint(e.Map()["m_pGameRules.m_fGameTime"]), 64)
 		}
+		if gameCurrentTime < 700 && e.GetClassName() == "CDOTA_PlayerResource" {
+			for i := 0; i < 10; i++ {
+				heroplayers[i].Hero_ID, _ = strconv.ParseInt(fmt.Sprint(e.Map()["m_vecPlayerTeamData.000"+strconv.Itoa(i)+".m_nSelectedHeroID"]), 10, 64)
+				heroplayers[i].Player_ID, _ = strconv.ParseInt(fmt.Sprint(e.Map()["m_vecPlayerData.000"+strconv.Itoa(i)+".m_iPlayerSteamID"]), 10, 64)
+			}
+		}
 		return nil
 	})
 
 	p.Start()
 
-	file, _ := json.MarshalIndent(glyphs, "", " ")
+	for k := range glyphs {
+		for l := range heroplayers {
+			if glyphs[k].User_steamID == uint64(heroplayers[l].Player_ID) {
+				glyphs[k].HeroID = uint64(heroplayers[l].Hero_ID)
+			}
+		}
+	}
 
+	file, _ := json.MarshalIndent(glyphs, "", " ")
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	write_to := "parsed_matches/" + match_id + ".json"
-
 	_ = ioutil.WriteFile(write_to, file, 0644)
 
 	return glyphs
