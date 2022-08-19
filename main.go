@@ -2,7 +2,9 @@ package main
 
 import (
 	"compress/bzip2"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,16 +14,21 @@ import (
 	"os"
 	"strconv"
 
+	valid "github.com/asaskevich/govalidator"
 	"github.com/dotabuff/manta"
 	"github.com/dotabuff/manta/dota"
-	"github.com/gin-gonic/gin"
+	"github.com/swaggest/rest/response/gzip"
+	"github.com/swaggest/rest/web"
+	"github.com/swaggest/swgui/v4emb"
+	"github.com/swaggest/usecase"
+	"github.com/swaggest/usecase/status"
 )
 
 type Glyph struct {
 	User_name    string `json:"user_name"`
 	User_steamID uint64 `json:"user_steamID"`
-	Minute       uint32 `json:"minute"`
-	Second       uint32 `json:"second"`
+	Minute       uint32 `json:"minute" minimum:"0" maximum:"60" description:"Minute when glyph was used"`
+	Second       uint32 `json:"second" minimum:"0" maximum:"60" description:"Second when glyph was used"`
 }
 
 type Match struct {
@@ -31,14 +38,25 @@ type Match struct {
 }
 
 func main() {
-	router := gin.Default()
+	s := web.DefaultService()
 
-	router.Use(CORSMiddleware())
+	s.OpenAPI.Info.Title = "Glyph by MatchID API"
+	s.OpenAPI.Info.WithDescription("This service provides API to get glyph usage in Dota 2 match based on match_id")
+	s.OpenAPI.Info.Version = "v0.2.0"
 
-	router.GET("/matches/:id", getGlyphsByID)
+	// Setup middlewares.
+	s.Wrap(
+		gzip.Middleware, // Response compression with support for direct gzip pass through.
+	)
 
-	router.Run("localhost:8080")
+	s.Get("/matches/{id}", getGlyphsByID())
 
+	s.Docs("/docs", v4emb.New)
+
+	log.Println("Starting service")
+	if err := http.ListenAndServe("localhost:8080", s); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func parseMatch(jsonBuffer []byte) ([]Match, error) {
@@ -72,25 +90,23 @@ func GetMatchStructWithMatchID(match_id string) []Match {
 	return sb
 }
 
-func RetrieveFileWithURL(URL_demo string, sb []Match) string {
+func RetrieveFileWithURL(URL_demo string, sb []Match, filename string) {
 	resp, err := http.Get(URL_demo)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return err.Error()
+		log.Fatalln(err)
 	}
-	filename := strconv.Itoa(sb[0].Match_id) + "_" + strconv.Itoa(sb[0].Replay_salt) + ".dem"
 	r_bz2 := bzip2.NewReader(resp.Body)
-	outfile, err := os.Create(filename)
+	outfile, err := os.Create("dem_files/" + filename)
 	defer outfile.Close()
 	_, err = io.Copy(outfile, r_bz2)
-	return filename
 }
 
-func ParseDemo(filename string) []Glyph {
-	f, err := os.Open(filename)
+func ParseDemo(filename string, match_id string) []Glyph {
+	f, err := os.Open("dem_files/" + filename)
 	if err != nil {
 		log.Fatalf("unable to open file: %s", err)
 	}
@@ -125,44 +141,123 @@ func ParseDemo(filename string) []Glyph {
 		}
 		return nil
 	})
+
 	p.Start()
+
+	file, _ := json.MarshalIndent(glyphs, "", " ")
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	write_to := "parsed_matches/" + match_id + ".json"
+
+	_ = ioutil.WriteFile(write_to, file, 0644)
 
 	return glyphs
 }
 
-func CORSMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-
-		c.Next()
+func CheckMatchIDCorrectness(match_id string) bool {
+	if valid.IsInt(match_id) {
+		return true
 	}
+	return false
 }
 
-func getGlyphsByID(c *gin.Context) {
-	match_id := string(c.Param("id"))
+func StringInSlice(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
 
-	fmt.Println("Requested MatchId: " + match_id)
+func IsDownloadedDemo(match_id string) bool {
+	IsDownloaded := false
+	var Demos []string
+	filename := "match_ids.json"
+	file, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = json.Unmarshal(file, &Demos)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if !StringInSlice(Demos, match_id) {
+		IsDownloaded = true
+		Demos = append(Demos, match_id)
+		file, err = json.Marshal(Demos)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		_ = ioutil.WriteFile("match_ids.json", file, 0644)
+	}
+	return IsDownloaded
+}
 
-	sb := GetMatchStructWithMatchID(match_id)
+func getGlyphsByID() usecase.Interactor {
+	var glyphs []Glyph
 
-	URL_demo := fmt.Sprintf("http://replay%d.valve.net/570/%d_%d.dem.bz2", sb[0].Cluster, sb[0].Match_id, sb[0].Replay_salt)
+	type getGlyphByIDInput struct {
+		ID string `path:"id"`
+	}
 
-	filename := RetrieveFileWithURL(URL_demo, sb)
+	u := usecase.NewIOI(getGlyphByIDInput{}, glyphs, func(ctx context.Context, input, output interface{}) error {
+		in := input.(getGlyphByIDInput)
 
-	fmt.Printf("File %d_%d.dem is downloaded\n", sb[0].Match_id, sb[0].Replay_salt)
+		match_id := (in.ID)
 
-	glyphs := ParseDemo(filename)
+		match_correctness := CheckMatchIDCorrectness(match_id)
 
-	fmt.Printf("File %d_%d.dem is parsed\n", sb[0].Match_id, sb[0].Replay_salt)
+		if !match_correctness {
+			return status.Wrap(errors.New("Match_id wrong type"), status.NotFound)
+		}
 
-	c.IndentedJSON(http.StatusOK, glyphs)
-	return
+		fmt.Println("Requested MatchId: " + match_id)
+
+		filename := match_id + ".dem"
+
+		if IsDownloadedDemo(match_id) {
+			// Downloading demo file
+			sb := GetMatchStructWithMatchID(match_id)
+
+			URL_demo := fmt.Sprintf("http://replay%d.valve.net/570/%d_%d.dem.bz2", sb[0].Cluster, sb[0].Match_id, sb[0].Replay_salt)
+
+			RetrieveFileWithURL(URL_demo, sb, filename)
+
+			fmt.Printf("File %d.dem is downloaded\n", sb[0].Match_id)
+
+			glyphs = ParseDemo(filename, match_id)
+
+			err := os.Remove("dem_files/" + filename)
+
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+		} else {
+			filename := "parsed_matches/" + match_id + ".json"
+			file, err := ioutil.ReadFile(filename)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			err = json.Unmarshal(file, &glyphs)
+			if err != nil {
+				log.Fatalln(err)
+			}
+		}
+
+		fmt.Printf("File %v is parsed\n", filename)
+
+		out := output.(*[]Glyph)
+		*out = glyphs
+
+		return nil
+	})
+	u.SetTags("Glyphs")
+	u.SetExpectedErrors(status.NotFound)
+
+	return u
 }
