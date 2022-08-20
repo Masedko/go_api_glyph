@@ -18,7 +18,7 @@ And then `go run .` to run server on `localhost:8080`.
 `curl -i -H 'Accept: application/json' http://localhost:8080/matches/6707633683`
 ### Response
 
-    `HTTP/1.1 200 OK
+    HTTP/1.1 200 OK
     Content-Length: 1102
     Content-Type: application/json; charset=utf-8
     Vary: Origin
@@ -34,7 +34,7 @@ And then `go run .` to run server on `localhost:8080`.
     {"user_name":"Довольный","user_steamID":76561198073597242,"minute":47,"second":3,"heroId":3},
     {"user_name":"NothingToSay","user_steamID":76561198134243802,"minute":47,"second":7,"heroId":90},
     {"user_name":"NothingToSay","user_steamID":76561198134243802,"minute":65,"second":7,"heroId":90},
-    {"user_name":"me sleeping","user_steamID":76561198262479756,"minute":74,"second":40,"heroId":47}]`
+    {"user_name":"me sleeping","user_steamID":76561198262479756,"minute":74,"second":40,"heroId":47}]
 ### Documentation
 `http://localhost:8080/docs`
 ### Schema
