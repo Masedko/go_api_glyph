@@ -27,11 +27,11 @@ import (
 )
 
 type Glyph struct {
-	User_name    string `json:"user_name" description:"Username (not current)"`
+	Username     string `json:"username" description:"Username (not current)"`
 	User_steamID uint64 `json:"user_steamID" description:"Steam64 ID"`
 	Minute       uint32 `json:"minute" minimum:"0" maximum:"60" description:"Minute when glyph was used"`
 	Second       uint32 `json:"second" minimum:"0" maximum:"60" description:"Second when glyph was used"`
-	HeroID       uint64 `json:"heroId" description:"ID of hero (https://liquipedia.net/dota2/MediaWiki:Dota2webapi-heroes.json)"`
+	HeroID       uint64 `json:"heroID" description:"ID of hero (https://liquipedia.net/dota2/MediaWiki:Dota2webapi-heroes.json)"`
 }
 
 type HeroPlayer struct {
@@ -139,7 +139,7 @@ func ParseDemo(filename string, match_id string) []Glyph {
 		if m.GetOrderType() == int32(dota.DotaunitorderT_DOTA_UNIT_ORDER_GLYPH) {
 			mapEntity := p.FindEntity(m.GetEntindex()).Map()
 			glyph = Glyph{
-				User_name:    mapEntity["m_iszPlayerName"].(string),
+				Username:     mapEntity["m_iszPlayerName"].(string),
 				User_steamID: mapEntity["m_steamID"].(uint64),
 				Minute:       uint32(gameCurrentTime-gameStartTime) / 60,
 				Second:       uint32(math.Round(gameCurrentTime-gameStartTime)) % 60,
