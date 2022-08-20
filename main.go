@@ -23,6 +23,7 @@ import (
 	"github.com/swaggest/swgui/v4emb"
 	"github.com/swaggest/usecase"
 	"github.com/swaggest/usecase/status"
+	"golang.org/x/exp/slices"
 )
 
 type Glyph struct {
@@ -128,6 +129,7 @@ func ParseDemo(filename string, match_id string) []Glyph {
 	gameStartTime := 0.0
 	gameCurrentTime := 0.0
 	var glyphs []Glyph
+	var glyph Glyph
 	var heroplayers []HeroPlayer
 	for i := 0; i < 10; i++ {
 		heroplayers = append(heroplayers, HeroPlayer{})
@@ -136,13 +138,15 @@ func ParseDemo(filename string, match_id string) []Glyph {
 	p.Callbacks.OnCDOTAUserMsg_SpectatorPlayerUnitOrders(func(m *dota.CDOTAUserMsg_SpectatorPlayerUnitOrders) error {
 		if m.GetOrderType() == int32(dota.DotaunitorderT_DOTA_UNIT_ORDER_GLYPH) {
 			mapEntity := p.FindEntity(m.GetEntindex()).Map()
-			glyphs = append(glyphs, Glyph{
+			glyph = Glyph{
 				User_name:    mapEntity["m_iszPlayerName"].(string),
 				User_steamID: mapEntity["m_steamID"].(uint64),
 				Minute:       uint32(gameCurrentTime-gameStartTime) / 60,
 				Second:       uint32(math.Round(gameCurrentTime-gameStartTime)) % 60,
-			})
-
+			}
+			if !slices.Contains(glyphs, glyph) {
+				glyphs = append(glyphs, glyph)
+			}
 		}
 		return nil
 	})
