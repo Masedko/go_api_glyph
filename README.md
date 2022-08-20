@@ -9,8 +9,6 @@ Run `go get -d ./...` from a directory of your project to download all go-gettab
 
 And then `go run .` to run server on `localhost:8080`.
 
-# REST API
-
 ## Get all glyph information in Match with MatchID
 
 ### Request
