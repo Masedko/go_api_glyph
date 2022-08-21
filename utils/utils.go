@@ -3,9 +3,10 @@ package utils
 import (
 	"compress/bzip2"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 
@@ -25,38 +26,42 @@ func parseMatch(jsonBuffer []byte) ([]structs.Match, error) {
 	return match, nil
 }
 
-func GetMatchStructWithMatchID(match_id string) []structs.Match {
+func GetMatchStructWithMatchID(match_id string) ([]structs.Match, error) {
 	URL_id := "https://api.opendota.com/api/replays?match_id=" + match_id
 	resp, err := http.Get(URL_id)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 
 	sb, err := parseMatch(body)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
-	return sb
+	return sb, nil
 }
 
-func RetrieveFileWithURL(URL_demo string, sb []structs.Match, filename string) {
+func RetrieveFileWithURL(URL_demo string, sb []structs.Match, filename string) error {
 	resp, err := http.Get(URL_demo)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		log.Fatalln(err)
+		return errors.New("Response is" + fmt.Sprint(resp.StatusCode) + "from" + URL_demo)
 	}
 	r_bz2 := bzip2.NewReader(resp.Body)
 	outfile, err := os.Create("dem_files/" + filename)
 	defer outfile.Close()
 	_, err = io.Copy(outfile, r_bz2)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func CheckMatchIDCorrectness(match_id string) bool {
@@ -75,26 +80,26 @@ func StringInSlice(s []string, e string) bool {
 	return false
 }
 
-func IsDownloadedDemo(match_id string) bool {
+func IsDownloadedDemo(match_id string) (bool, error) {
 	IsDownloaded := false
 	var Demos []string
 	filename := "match_ids.json"
 	file, err := ioutil.ReadFile(filename)
 	if err != nil {
-		log.Fatalln(err)
+		return false, err
 	}
 	err = json.Unmarshal(file, &Demos)
 	if err != nil {
-		log.Fatalln(err)
+		return false, err
 	}
 	if !StringInSlice(Demos, match_id) {
 		IsDownloaded = true
 		Demos = append(Demos, match_id)
 		file, err = json.Marshal(Demos)
 		if err != nil {
-			log.Fatalln(err)
+			return false, err
 		}
 		_ = ioutil.WriteFile("match_ids.json", file, 0644)
 	}
-	return IsDownloaded
+	return IsDownloaded, nil
 }

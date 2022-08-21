@@ -32,6 +32,7 @@ func main() {
 	s.Wrap(
 		gzip.Middleware,
 	)
+	// Change this for security
 	s.Use(cors.AllowAll().Handler)
 
 	s.Get("/matches/{id}", getGlyphsByID())
@@ -48,16 +49,17 @@ func main() {
 
 func getMatches() usecase.Interactor {
 	var Demos []string
-	filename := "match_ids.json"
-	file, err := ioutil.ReadFile(filename)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	err = json.Unmarshal(file, &Demos)
-	if err != nil {
-		log.Fatalln(err)
-	}
 	u := usecase.NewIOI(nil, Demos, func(ctx context.Context, _, output interface{}) error {
+		filename := "match_ids.json"
+		file, err := ioutil.ReadFile(filename)
+		// Work with errors TODO
+		if err != nil {
+			return status.Wrap(err, status.Internal)
+		}
+		err = json.Unmarshal(file, &Demos)
+		if err != nil {
+			return status.Wrap(err, status.Internal)
+		}
 		out := output.(*[]string)
 		*out = Demos
 		return nil
@@ -88,33 +90,44 @@ func getGlyphsByID() usecase.Interactor {
 
 		filename := match_id + ".dem"
 
-		if utils.IsDownloadedDemo(match_id) {
+		stateOfMatchID, err := utils.IsDownloadedDemo(match_id)
+		if err != nil {
+			return status.Wrap(err, status.Internal)
+		}
+		if stateOfMatchID {
 			// Downloading demo file
-			sb := utils.GetMatchStructWithMatchID(match_id)
+
+			sb, err := utils.GetMatchStructWithMatchID(match_id)
 
 			URL_demo := fmt.Sprintf("http://replay%d.valve.net/570/%d_%d.dem.bz2", sb[0].Cluster, sb[0].Match_id, sb[0].Replay_salt)
 
-			utils.RetrieveFileWithURL(URL_demo, sb, filename)
+			err = utils.RetrieveFileWithURL(URL_demo, sb, filename)
+			if err != nil {
+				return status.Wrap(err, status.Internal)
+			}
 
 			fmt.Printf("File %d.dem is downloaded\n", sb[0].Match_id)
 
-			glyphs = parser.ParseDemo(filename, match_id)
-
-			err := os.Remove("dem_files/" + filename)
-
+			glyphs, err = parser.ParseDemo(filename, match_id)
+			// TODO
 			if err != nil {
-				log.Fatalln(err)
+				return status.Wrap(err, status.Internal)
 			}
 
+			err = os.Remove("dem_files/" + filename)
+
+			if err != nil {
+				return status.Wrap(err, status.Internal)
+			}
 		} else {
 			filename := "parsed_matches/" + match_id + ".json"
 			file, err := ioutil.ReadFile(filename)
 			if err != nil {
-				log.Fatalln(err)
+				return status.Wrap(err, status.Internal)
 			}
 			err = json.Unmarshal(file, &glyphs)
 			if err != nil {
-				log.Fatalln(err)
+				return status.Wrap(err, status.Internal)
 			}
 		}
 

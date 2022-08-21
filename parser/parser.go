@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math"
 	"os"
 	"strconv"
@@ -15,16 +14,16 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func ParseDemo(filename string, match_id string) []structs.Glyph {
+func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 	f, err := os.Open("dem_files/" + filename)
 	if err != nil {
-		log.Fatalf("unable to open file: %s", err)
+		return nil, err
 	}
 	defer f.Close()
 
 	p, err := manta.NewStreamParser(f)
 	if err != nil {
-		log.Fatalf("unable to create parser: %s", err)
+		return nil, err
 	}
 
 	gameStartTime := 0.0
@@ -78,11 +77,11 @@ func ParseDemo(filename string, match_id string) []structs.Glyph {
 
 	file, _ := json.MarshalIndent(glyphs, "", " ")
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 
 	write_to := "parsed_matches/" + match_id + ".json"
 	_ = ioutil.WriteFile(write_to, file, 0644)
 
-	return glyphs
+	return glyphs, nil
 }
