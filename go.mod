@@ -1,4 +1,4 @@
-module go_app
+module github.com/Masedko/go_api_glyph
 
 go 1.19
 
