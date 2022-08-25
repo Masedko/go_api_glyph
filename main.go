@@ -93,7 +93,7 @@ func getGlyphsByID() usecase.Interactor {
 		if err != nil {
 			return status.Wrap(err, status.Internal)
 		}
-		if stateOfMatchID {
+		if stateOfMatchID == "Downloaded" {
 			// Downloading demo file
 			sb, err := utils.GetMatchStructWithMatchID(match_id)
 
@@ -121,7 +121,8 @@ func getGlyphsByID() usecase.Interactor {
 			if err != nil {
 				return status.Wrap(err, status.Internal)
 			}
-		} else {
+
+		} else if stateOfMatchID == "None" {
 			filename := "parsed_matches/" + match_id + ".json"
 			file, err := ioutil.ReadFile(filename)
 			if err != nil {
@@ -131,6 +132,9 @@ func getGlyphsByID() usecase.Interactor {
 			if err != nil {
 				return status.Wrap(err, status.Internal)
 			}
+		} else if stateOfMatchID == "Downloading" {
+			fmt.Printf("%v file is being parsed\n", filename)
+			return status.Wrap(err, status.Internal)
 		}
 
 		fmt.Printf("File %v is parsed\n", filename)
