@@ -25,7 +25,7 @@ func main() {
 
 	s.OpenAPI.Info.Title = "Glyph by MatchID API"
 	s.OpenAPI.Info.WithDescription("This service provides API to get glyph usage in Dota 2 match based on match_id")
-	s.OpenAPI.Info.Version = "v0.2.1"
+	s.OpenAPI.Info.Version = "v1.0.0"
 
 	// Setup middlewares.
 	s.Wrap(
@@ -48,7 +48,7 @@ func main() {
 	s.Docs("/docs", v4emb.New)
 
 	log.Println("Starting service")
-	if err := http.ListenAndServe(":"+os.Getenv("PORT"), s); err != nil {
+	if err := http.ListenAndServe("localhost:8080:", s); err != nil {
 		log.Fatal(err)
 	}
 }
