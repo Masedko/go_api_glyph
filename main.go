@@ -134,7 +134,7 @@ func getGlyphsByID() usecase.Interactor {
 			}
 		} else if stateOfMatchID == "Downloading" {
 			fmt.Printf("%v file is being parsed\n", filename)
-			return status.Wrap(err, status.Internal)
+			return status.Wrap(err, status.AlreadyExists)
 		}
 
 		fmt.Printf("File %v is parsed\n", filename)
