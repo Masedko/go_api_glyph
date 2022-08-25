@@ -43,7 +43,7 @@ func main() {
 
 	s.Get("/matches/{id}", getGlyphsByID())
 
-	s.Get("/matches", getMatches())
+	s.Get("/", getMatches())
 
 	s.Docs("/docs", v4emb.New)
 
