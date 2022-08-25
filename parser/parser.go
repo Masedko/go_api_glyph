@@ -69,7 +69,7 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 
 	for k := range glyphs {
 		for l := range heroplayers {
-			if glyphs[k].User_steamID == string(heroplayers[l].Player_ID) {
+			if glyphs[k].User_steamID == fmt.Sprint(heroplayers[l].Player_ID) {
 				glyphs[k].HeroID = uint64(heroplayers[l].Hero_ID)
 			}
 		}
