@@ -40,7 +40,7 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 			mapEntity := p.FindEntity(m.GetEntindex()).Map()
 			glyph = structs.Glyph{
 				Username:     mapEntity["m_iszPlayerName"].(string),
-				User_steamID: mapEntity["m_steamID"].(uint64),
+				User_steamID: mapEntity["m_steamID"].(string),
 				Minute:       uint32(gameCurrentTime-gameStartTime) / 60,
 				Second:       uint32(math.Round(gameCurrentTime-gameStartTime)) % 60,
 			}
@@ -69,7 +69,7 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 
 	for k := range glyphs {
 		for l := range heroplayers {
-			if glyphs[k].User_steamID == uint64(heroplayers[l].Player_ID) {
+			if glyphs[k].User_steamID == string(heroplayers[l].Player_ID) {
 				glyphs[k].HeroID = uint64(heroplayers[l].Hero_ID)
 			}
 		}
