@@ -45,7 +45,7 @@ func main() {
 
 	s.Get("/matches/", getMatches())
 
-	s.Docs("/", v4emb.New)
+	s.Docs("/docs", v4emb.New)
 
 	log.Println("Starting service")
 	if err := http.ListenAndServe(":"+os.Getenv("PORT"), s); err != nil {
