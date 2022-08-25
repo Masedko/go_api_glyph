@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -32,8 +31,15 @@ func main() {
 	s.Wrap(
 		gzip.Middleware,
 	)
-	// Change this for security
-	s.Use(cors.AllowAll().Handler)
+
+	s.Use(cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{
+			http.MethodGet,
+		},
+		AllowedHeaders:   []string{"Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With"},
+		AllowCredentials: false,
+	}).Handler)
 
 	s.Get("/matches/{id}", getGlyphsByID())
 
@@ -52,7 +58,6 @@ func getMatches() usecase.Interactor {
 	u := usecase.NewIOI(nil, Demos, func(ctx context.Context, _, output interface{}) error {
 		filename := "match_ids.json"
 		file, err := ioutil.ReadFile(filename)
-		// Work with errors TODO
 		if err != nil {
 			return status.Wrap(err, status.Internal)
 		}
@@ -80,12 +85,6 @@ func getGlyphsByID() usecase.Interactor {
 
 		match_id := (in.ID)
 
-		match_correctness := utils.CheckMatchIDCorrectness(match_id)
-
-		if !match_correctness {
-			return status.Wrap(errors.New("Match_id wrong type"), status.NotFound)
-		}
-
 		fmt.Println("Requested MatchId: " + match_id)
 
 		filename := match_id + ".dem"
@@ -96,8 +95,11 @@ func getGlyphsByID() usecase.Interactor {
 		}
 		if stateOfMatchID {
 			// Downloading demo file
-
 			sb, err := utils.GetMatchStructWithMatchID(match_id)
+
+			if err != nil {
+				return status.Wrap(err, status.Internal)
+			}
 
 			URL_demo := fmt.Sprintf("http://replay%d.valve.net/570/%d_%d.dem.bz2", sb[0].Cluster, sb[0].Match_id, sb[0].Replay_salt)
 
@@ -109,7 +111,7 @@ func getGlyphsByID() usecase.Interactor {
 			fmt.Printf("File %d.dem is downloaded\n", sb[0].Match_id)
 
 			glyphs, err = parser.ParseDemo(filename, match_id)
-			// TODO
+
 			if err != nil {
 				return status.Wrap(err, status.Internal)
 			}
@@ -132,6 +134,7 @@ func getGlyphsByID() usecase.Interactor {
 		}
 
 		fmt.Printf("File %v is parsed\n", filename)
+		utils.AppendDownloadedDemo(match_id)
 
 		out := output.(*[]structs.Glyph)
 		*out = glyphs
