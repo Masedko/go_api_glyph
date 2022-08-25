@@ -83,22 +83,25 @@ func StringInSlice(s []string, e string) bool {
 	return false
 }
 
-func IsDownloadedDemo(match_id string) (bool, error) {
-	IsDownloaded := false
+func IsDownloadedDemo(match_id string) (string, error) {
+	state := "None"
 	var Demos []string
 	filename := "match_ids.json"
 	file, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return false, err
+		return state, err
 	}
 	err = json.Unmarshal(file, &Demos)
 	if err != nil {
-		return false, err
+		return state, err
 	}
 	if !StringInSlice(Demos, match_id) {
-		IsDownloaded = true
+		state = "Downloaded"
 	}
-	return IsDownloaded, nil
+	if _, err := os.Stat("dem_files/" + match_id + ".dem"); err == nil {
+		state = "Downloading"
+	}
+	return state, nil
 }
 
 func AppendDownloadedDemo(match_id string) error {
