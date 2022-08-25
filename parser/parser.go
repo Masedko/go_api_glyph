@@ -40,7 +40,7 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 			mapEntity := p.FindEntity(m.GetEntindex()).Map()
 			glyph = structs.Glyph{
 				Username:     mapEntity["m_iszPlayerName"].(string),
-				User_steamID: mapEntity["m_steamID"].(string),
+				User_steamID: fmt.Sprint(mapEntity["m_steamID"].(uint64)),
 				Minute:       uint32(gameCurrentTime-gameStartTime) / 60,
 				Second:       uint32(math.Round(gameCurrentTime-gameStartTime)) % 60,
 			}
@@ -59,7 +59,9 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 		if gameCurrentTime < 700 && e.GetClassName() == "CDOTA_PlayerResource" {
 			for i := 0; i < 10; i++ {
 				heroplayers[i].Hero_ID, _ = strconv.ParseInt(fmt.Sprint(e.Map()["m_vecPlayerTeamData.000"+strconv.Itoa(i)+".m_nSelectedHeroID"]), 10, 64)
-				heroplayers[i].Player_ID, _ = strconv.ParseInt(fmt.Sprint(e.Map()["m_vecPlayerData.000"+strconv.Itoa(i)+".m_iPlayerSteamID"]), 10, 64)
+				intToString, _ := strconv.ParseInt(fmt.Sprint(e.Map()["m_vecPlayerData.000"+strconv.Itoa(i)+".m_iPlayerSteamID"]), 10, 64)
+				heroplayers[i].Player_ID = fmt.Sprint(intToString)
+
 			}
 		}
 		return nil
@@ -69,7 +71,7 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 
 	for k := range glyphs {
 		for l := range heroplayers {
-			if glyphs[k].User_steamID == fmt.Sprint(heroplayers[l].Player_ID) {
+			if fmt.Sprint(glyphs[k].User_steamID) == fmt.Sprint(heroplayers[l].Player_ID) {
 				glyphs[k].HeroID = uint64(heroplayers[l].Hero_ID)
 			}
 		}
