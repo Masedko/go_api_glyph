@@ -40,6 +40,7 @@ func main() {
 		AllowedHeaders:   []string{"Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With"},
 		AllowCredentials: false,
 	}).Handler)
+	http.HandleFunc("/favicon.ico", getFavicon)
 
 	s.Get("/matches/{id}", getGlyphsByID())
 
@@ -48,7 +49,7 @@ func main() {
 	s.Docs("/docs", v4emb.New)
 
 	log.Println("Starting service")
-	if err := http.ListenAndServe("localhost:8080:", s); err != nil {
+	if err := http.ListenAndServe(":"+os.Getenv("PORT"), s); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -71,6 +72,10 @@ func getMatches() usecase.Interactor {
 	})
 	u.SetTags("Matches")
 	return u
+}
+
+func getFavicon(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "favicon.ico")
 }
 
 func getGlyphsByID() usecase.Interactor {
