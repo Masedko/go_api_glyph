@@ -11,7 +11,6 @@ import (
 	"os"
 
 	"github.com/Masedko/go_api_glyph/structs"
-	valid "github.com/asaskevich/govalidator"
 )
 
 func parseMatch(jsonBuffer []byte) ([]structs.Match, error) {
@@ -67,13 +66,6 @@ func RetrieveFileWithURL(URL_demo string, sb []structs.Match, filename string) e
 	return nil
 }
 
-func CheckMatchIDCorrectness(match_id string) bool {
-	if valid.IsInt(match_id) {
-		return true
-	}
-	return false
-}
-
 func StringInSlice(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {
@@ -87,13 +79,9 @@ func IsDownloadedDemo(match_id string) (string, error) {
 	state := "None"
 	var Demos []string
 	filename := "match_ids.json"
-	file, err := ioutil.ReadFile(filename)
+	_, err := UnmarshalIntoSlices(filename, Demos)
 	if err != nil {
-		return state, err
-	}
-	err = json.Unmarshal(file, &Demos)
-	if err != nil {
-		return state, err
+		return "", err
 	}
 	if !StringInSlice(Demos, match_id) {
 		state = "Downloaded"
@@ -107,14 +95,7 @@ func IsDownloadedDemo(match_id string) (string, error) {
 func AppendDownloadedDemo(match_id string) error {
 	var Demos []string
 	filename := "match_ids.json"
-	file, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(file, &Demos)
-	if err != nil {
-		return err
-	}
+	file, err := UnmarshalIntoSlices(filename, Demos)
 	if !StringInSlice(Demos, match_id) {
 		Demos = append(Demos, match_id)
 		file, err = json.Marshal(Demos)
@@ -124,4 +105,16 @@ func AppendDownloadedDemo(match_id string) error {
 		_ = ioutil.WriteFile("match_ids.json", file, 0644)
 	}
 	return nil
+}
+
+func UnmarshalIntoSlices(filename string, slices []string) ([]byte, error) {
+	file, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(file, &slices)
+	if err != nil {
+		return nil, err
+	}
+	return file, nil
 }

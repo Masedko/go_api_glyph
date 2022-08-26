@@ -51,7 +51,7 @@ func main() {
 	s.Docs("/docs", v4emb.New)
 
 	log.Println("Starting service")
-	if err := http.ListenAndServe(":"+os.Getenv("PORT"), s); err != nil {
+	if err := http.ListenAndServe("localhost:8080", s); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -105,7 +105,7 @@ func getGlyphsByID() usecase.Interactor {
 			sb, err := utils.GetMatchStructWithMatchID(match_id)
 
 			if err != nil {
-				return status.Wrap(err, status.Internal)
+				return status.Wrap(err, status.InvalidArgument)
 			}
 
 			URL_demo := fmt.Sprintf("http://replay%d.valve.net/570/%d_%d.dem.bz2", sb[0].Cluster, sb[0].Match_id, sb[0].Replay_salt)
