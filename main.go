@@ -33,7 +33,7 @@ func main() {
 	)
 
 	s.Use(cors.New(cors.Options{
-		AllowedOrigins: []string{"*"},
+		AllowedOrigins: []string{"http://localhost:3000", "https://s3rbug.github.io"},
 		AllowedMethods: []string{
 			http.MethodGet,
 		},
