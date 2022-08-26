@@ -20,7 +20,10 @@ import (
 	"github.com/swaggest/usecase/status"
 )
 
+var limiter = NewIPRateLimiter(1, 5)
+
 func main() {
+
 	s := web.DefaultService()
 
 	s.OpenAPI.Info.Title = "Glyph by MatchID API"
@@ -40,6 +43,7 @@ func main() {
 		AllowedHeaders:   []string{"Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With"},
 		AllowCredentials: false,
 	}).Handler)
+
 	s.HandleFunc("/favicon.ico", getFavicon)
 
 	s.Get("/matches/{id}", getGlyphsByID())
@@ -51,9 +55,21 @@ func main() {
 	s.Docs("/docs", v4emb.New)
 
 	log.Println("Starting service")
-	if err := http.ListenAndServe(":"+os.Getenv("PORT"), s); err != nil {
+	if err := http.ListenAndServe(":"+os.Getenv("PORT"), limitMiddleware(s)); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func limitMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		limiter := limiter.GetLimiter(r.RemoteAddr)
+		if !limiter.Allow() {
+			http.Error(w, http.StatusText(http.StatusTooManyRequests), http.StatusTooManyRequests)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func getMatches() usecase.Interactor {

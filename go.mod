@@ -3,13 +3,13 @@ module github.com/Masedko/go_api_glyph
 go 1.18
 
 require (
-	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/dotabuff/manta v1.3.7
 	github.com/rs/cors v1.8.2
 	github.com/swaggest/rest v0.2.30
 	github.com/swaggest/swgui v1.4.5
 	github.com/swaggest/usecase v1.1.3
-	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
+	golang.org/x/exp v0.0.0-20220826144839-4cc3b17fd1f1
+	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9
 )
 
 require (
