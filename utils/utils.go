@@ -28,9 +28,11 @@ func parseMatch(jsonBuffer []byte) ([]structs.Match, error) {
 func GetMatchStructWithMatchID(match_id string) ([]structs.Match, error) {
 	URL_id := "https://api.opendota.com/api/replays?match_id=" + match_id
 	resp, err := http.Get(URL_id)
+
 	if err != nil {
 		return nil, err
 	}
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -77,9 +79,13 @@ func IsDownloadedDemo(match_id string) (string, error) {
 	state := "None"
 	var Demos []string
 	filename := "match_ids.json"
-	_, err := UnmarshalIntoSlices(filename, Demos)
+	file, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return "", err
+		return state, err
+	}
+	err = json.Unmarshal(file, &Demos)
+	if err != nil {
+		return state, err
 	}
 	if !StringInSlice(Demos, match_id) {
 		state = "Downloaded"
@@ -93,7 +99,14 @@ func IsDownloadedDemo(match_id string) (string, error) {
 func AppendDownloadedDemo(match_id string) error {
 	var Demos []string
 	filename := "match_ids.json"
-	file, err := UnmarshalIntoSlices(filename, Demos)
+	file, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(file, &Demos)
+	if err != nil {
+		return err
+	}
 	if !StringInSlice(Demos, match_id) {
 		Demos = append(Demos, match_id)
 		file, err = json.Marshal(Demos)
@@ -103,16 +116,4 @@ func AppendDownloadedDemo(match_id string) error {
 		_ = ioutil.WriteFile("match_ids.json", file, 0644)
 	}
 	return nil
-}
-
-func UnmarshalIntoSlices(filename string, slices []string) ([]byte, error) {
-	file, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(file, &slices)
-	if err != nil {
-		return nil, err
-	}
-	return file, nil
 }
