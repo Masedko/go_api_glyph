@@ -28,11 +28,9 @@ func parseMatch(jsonBuffer []byte) ([]structs.Match, error) {
 func GetMatchStructWithMatchID(match_id string) ([]structs.Match, error) {
 	URL_id := "https://api.opendota.com/api/replays?match_id=" + match_id
 	resp, err := http.Get(URL_id)
-
 	if err != nil {
 		return nil, err
 	}
-
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
