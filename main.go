@@ -51,7 +51,7 @@ func main() {
 	s.Docs("/docs", v4emb.New)
 
 	log.Println("Starting service")
-	if err := http.ListenAndServe("localhost:8080", s); err != nil {
+	if err := http.ListenAndServe(":"+os.Getenv("PORT"), s); err != nil {
 		log.Fatal(err)
 	}
 }
