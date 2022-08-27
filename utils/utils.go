@@ -1,16 +1,17 @@
 package utils
 
 import (
-	"compress/bzip2"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 
 	"github.com/Masedko/go_api_glyph/structs"
+	"github.com/melbahja/got"
 )
 
 func parseMatch(jsonBuffer []byte) ([]structs.Match, error) {
@@ -47,19 +48,28 @@ func GetMatchStructWithMatchID(match_id string) ([]structs.Match, error) {
 	return sb, nil
 }
 
-func RetrieveFileWithURL(URL_demo string, sb []structs.Match, filename string) error {
-	resp, err := http.Get(URL_demo)
-	if err != nil {
+func RetrieveFileWithURL(sb []structs.Match, filename string) error {
+	URL_demo := fmt.Sprintf("http://replay%d.valve.net/570/%d_%d.dem.bz2", sb[0].Cluster, sb[0].Match_id, sb[0].Replay_salt)
+	ctx := context.Background()
+
+	dl := got.NewDownload(ctx, URL_demo, "dem_files/"+filename)
+
+	// Init
+	if err := dl.Init(); err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return errors.New("Response is" + fmt.Sprint(resp.StatusCode) + "from" + URL_demo)
+
+	// Start download
+	if err := dl.Start(); err != nil {
+		return err
 	}
-	r_bz2 := bzip2.NewReader(resp.Body)
-	outfile, err := os.Create("dem_files/" + filename)
-	defer outfile.Close()
-	_, err = io.Copy(outfile, r_bz2)
+
+	app := "bzip2"
+	arg0 := "-d"
+	arg1 := "dem_files/" + filename
+
+	cmd := exec.Command(app, arg0, arg1)
+	_, err := cmd.Output()
 	if err != nil {
 		return err
 	}

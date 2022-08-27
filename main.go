@@ -51,7 +51,7 @@ func main() {
 	s.Docs("/docs", v4emb.New)
 
 	log.Println("Starting service")
-	if err := http.ListenAndServe(":"+os.Getenv("PORT"), s); err != nil {
+	if err := http.ListenAndServe("localhost:8080", s); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -94,8 +94,6 @@ func getGlyphsByID() usecase.Interactor {
 
 		fmt.Println("Requested MatchId: " + match_id)
 
-		filename := match_id + ".dem"
-
 		stateOfMatchID, err := utils.IsDownloadedDemo(match_id)
 		if err != nil {
 			return status.Wrap(err, status.Internal)
@@ -108,21 +106,21 @@ func getGlyphsByID() usecase.Interactor {
 				return status.Wrap(err, status.InvalidArgument)
 			}
 
-			URL_demo := fmt.Sprintf("http://replay%d.valve.net/570/%d_%d.dem.bz2", sb[0].Cluster, sb[0].Match_id, sb[0].Replay_salt)
+			filename_bz2 := fmt.Sprintf("%d_%d.dem.bz2", sb[0].Match_id, sb[0].Replay_salt)
+			filename := filename_bz2[:len(filename_bz2)-4]
 
-			err = utils.RetrieveFileWithURL(URL_demo, sb, filename)
+			err = utils.RetrieveFileWithURL(sb, filename_bz2)
 			if err != nil {
 				return status.Wrap(err, status.Internal)
 			}
 
-			fmt.Printf("File %d.dem is downloaded\n", sb[0].Match_id)
+			fmt.Printf("Match %d is downloaded\n", sb[0].Match_id)
 
 			glyphs, err = parser.ParseDemo(filename, match_id)
 
 			if err != nil {
 				return status.Wrap(err, status.Internal)
 			}
-
 			err = os.Remove("dem_files/" + filename)
 
 			if err != nil {
@@ -140,11 +138,11 @@ func getGlyphsByID() usecase.Interactor {
 				return status.Wrap(err, status.Internal)
 			}
 		} else if stateOfMatchID == "Downloading" {
-			fmt.Printf("%v file is being parsed\n", filename)
+			fmt.Printf("%v is being parsed\n", match_id)
 			return status.Wrap(err, status.Unavailable)
 		}
 
-		fmt.Printf("File %v is parsed\n", filename)
+		fmt.Printf("File %v is parsed\n", match_id)
 		utils.AppendDownloadedDemo(match_id)
 
 		out := output.(*[]structs.Glyph)
