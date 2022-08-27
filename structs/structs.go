@@ -9,8 +9,8 @@ type Glyph struct {
 }
 
 type HeroPlayer struct {
-	Hero_ID   int64
-	Player_ID string
+	Hero_ID   interface{}
+	Player_ID interface{}
 }
 
 type Match struct {
