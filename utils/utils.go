@@ -58,12 +58,12 @@ func RetrieveFileWithURL(sb []structs.Match, filename string) error {
 	if err := dl.Init(); err != nil {
 		return err
 	}
-
+	fmt.Println("Start download")
 	// Start download
 	if err := dl.Start(); err != nil {
 		return err
 	}
-
+	fmt.Println("Decompressing bzip2 file")
 	app := "bzip2"
 	arg0 := "-d"
 	arg1 := "dem_files/" + filename
