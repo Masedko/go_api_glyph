@@ -106,7 +106,7 @@ func getGlyphsByID() usecase.Interactor {
 				return status.Wrap(err, status.InvalidArgument)
 			}
 			fmt.Println("2")
-			filename_bz2 := fmt.Sprintf("%d_%d.dem.bz2", sb[0].Match_id, sb[0].Replay_salt)
+			filename_bz2 := fmt.Sprintf("%v.dem.bz2", match_id)
 			filename := filename_bz2[:len(filename_bz2)-4]
 
 			err = utils.RetrieveFileWithURL(sb, filename_bz2)
