@@ -67,7 +67,7 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 	})
 
 	p.Start()
-
+	fmt.Println("1")
 	for k := range glyphs {
 		for l := range heroplayers {
 			if fmt.Sprint(glyphs[k].User_steamID) == fmt.Sprint(heroplayers[l].Player_ID) {
@@ -76,7 +76,7 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 			}
 		}
 	}
-
+	fmt.Println("2")
 	file, _ := json.MarshalIndent(glyphs, "", " ")
 	if err != nil {
 		return nil, err

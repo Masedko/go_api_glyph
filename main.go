@@ -101,11 +101,11 @@ func getGlyphsByID() usecase.Interactor {
 		if stateOfMatchID == "Downloaded" {
 			// Downloading demo file
 			sb, err := utils.GetMatchStructWithMatchID(match_id)
-			fmt.Println("1")
+
 			if err != nil {
 				return status.Wrap(err, status.InvalidArgument)
 			}
-			fmt.Println("2")
+
 			filename_bz2 := fmt.Sprintf("%v.dem.bz2", match_id)
 			filename := filename_bz2[:len(filename_bz2)-4]
 
@@ -113,7 +113,7 @@ func getGlyphsByID() usecase.Interactor {
 			if err != nil {
 				return status.Wrap(err, status.Internal)
 			}
-			fmt.Println("3")
+
 			fmt.Printf("Match %d is downloaded\n", sb[0].Match_id)
 
 			glyphs, err = parser.ParseDemo(filename, match_id)
@@ -121,25 +121,25 @@ func getGlyphsByID() usecase.Interactor {
 			if err != nil {
 				return status.Wrap(err, status.Internal)
 			}
-			fmt.Println("4")
+
 			err = os.Remove("dem_files/" + filename)
 
 			if err != nil {
 				return status.Wrap(err, status.Internal)
 			}
-			fmt.Println("5")
+
 		} else if stateOfMatchID == "None" {
 			filename := "parsed_matches/" + match_id + ".json"
 			file, err := ioutil.ReadFile(filename)
 			if err != nil {
 				return status.Wrap(err, status.Internal)
 			}
-			fmt.Println("6")
+
 			err = json.Unmarshal(file, &glyphs)
 			if err != nil {
 				return status.Wrap(err, status.Internal)
 			}
-			fmt.Println("7")
+
 		} else if stateOfMatchID == "Downloading" {
 			fmt.Printf("%v is being parsed\n", match_id)
 			return status.Wrap(err, status.Unavailable)
