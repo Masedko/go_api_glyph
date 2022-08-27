@@ -58,8 +58,9 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 		}
 		if gameCurrentTime < 1100 && e.GetClassName() == "CDOTA_PlayerResource" {
 			for i := 0; i < 10; i++ {
-				heroplayers[i].Hero_ID, _ = e.Map()["m_vecPlayerTeamData.000"+strconv.Itoa(i)+".m_nSelectedHeroID"]
-				heroplayers[i].Player_ID = e.Map()["m_vecPlayerData.000"+strconv.Itoa(i)+".m_iPlayerSteamID"]
+				heroplayers[i].Hero_ID, _ = strconv.ParseInt(fmt.Sprint(e.Map()["m_vecPlayerTeamData.000"+strconv.Itoa(i)+".m_nSelectedHeroID"]), 10, 64)
+				intToString, _ := strconv.ParseInt(fmt.Sprint(e.Map()["m_vecPlayerData.000"+strconv.Itoa(i)+".m_iPlayerSteamID"]), 10, 64)
+				heroplayers[i].Player_ID = fmt.Sprint(intToString)
 
 			}
 		}
@@ -67,16 +68,15 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 	})
 
 	p.Start()
-	fmt.Println("1")
+
 	for k := range glyphs {
 		for l := range heroplayers {
 			if fmt.Sprint(glyphs[k].User_steamID) == fmt.Sprint(heroplayers[l].Player_ID) {
-				ParsedInt, _ := strconv.ParseInt(fmt.Sprint(heroplayers[l].Hero_ID), 10, 64)
-				glyphs[k].HeroID = uint64(ParsedInt)
+				glyphs[k].HeroID = uint64(heroplayers[l].Hero_ID)
 			}
 		}
 	}
-	fmt.Println("2")
+
 	file, _ := json.MarshalIndent(glyphs, "", " ")
 	if err != nil {
 		return nil, err
