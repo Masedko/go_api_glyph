@@ -64,7 +64,7 @@ func RetrieveFileWithURL(sb []structs.Match, filename string) error {
 		return err
 	}
 	fmt.Println("Decompressing bzip2 file")
-	app := "lbzip2"
+	app := "bzip2"
 	arg0 := "-d"
 	arg1 := "dem_files/" + filename
 
