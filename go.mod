@@ -18,7 +18,9 @@ require (
 	github.com/go-chi/chi/v5 v5.0.7 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
+	github.com/machinebox/graphql v0.2.2 // indirect
 	github.com/melbahja/got v0.7.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/santhosh-tekuri/jsonschema/v3 v3.1.0 // indirect
 	github.com/swaggest/form/v5 v5.0.1 // indirect
 	github.com/swaggest/jsonschema-go v0.3.35 // indirect

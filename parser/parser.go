@@ -53,8 +53,8 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 
 	p.OnEntity(func(e *manta.Entity, op manta.EntityOp) error {
 		if e.GetClassName() == "CDOTAGamerulesProxy" {
-			gameStartTime, err = strconv.ParseFloat(fmt.Sprint(e.Map()["m_pGameRules.m_flGameStartTime"]), 64)
-			gameCurrentTime, err = strconv.ParseFloat(fmt.Sprint(e.Map()["m_pGameRules.m_fGameTime"]), 64)
+			gameStartTime = e.Get("m_pGameRules.m_flGameStartTime").(float64)
+			gameCurrentTime = e.Get("m_pGameRules.m_fGameTime").(float64)
 		}
 		if gameCurrentTime < 1100 && e.GetClassName() == "CDOTA_PlayerResource" {
 			for i := 0; i < 10; i++ {

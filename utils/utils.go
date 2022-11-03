@@ -3,14 +3,13 @@ package utils
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 
 	"github.com/Masedko/go_api_glyph/structs"
+	"github.com/machinebox/graphql"
 	"github.com/melbahja/got"
 )
 
@@ -27,23 +26,25 @@ func parseMatch(jsonBuffer []byte) ([]structs.Match, error) {
 }
 
 func GetMatchStructWithMatchID(match_id string) ([]structs.Match, error) {
-	URL_id := "https://api.opendota.com/api/replays?match_id=" + match_id
-	resp, err := http.Get(URL_id)
+	client := graphql.NewClient("https://api.stratz.com/graphql/")
+	req := graphql.NewRequest(`
+    query ($key: Long!) {
+        match(id:$key) {
+            replaySalt,
+            clusterId
+        }
+    }`)
+	// set any variables
+	stratzToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJodHRwczovL3N0ZWFtY29tbXVuaXR5LmNvbS9vcGVuaWQvaWQvNzY1NjExOTgzMzQwMzE4MTQiLCJ1bmlxdWVfbmFtZSI6ItCS0L4g0YHQu9Cw0LLRgyDQv9C70LXRgtC4ISIsIlN1YmplY3QiOiJiOTFjNDAxNy1iYzQwLTQ4NTMtOGJiMC03YmZkNzgyNTU1MDYiLCJTdGVhbUlkIjoiMzczNzY2MDg2IiwibmJmIjoxNjQzNTAwMjg2LCJleHAiOjE2NzUwMzYyODYsImlhdCI6MTY0MzUwMDI4NiwiaXNzIjoiaHR0cHM6Ly9hcGkuc3RyYXR6LmNvbSJ9.FPtVZnsflLsNMhM7VtL9qJkB6B9SwOpaWAJFII-jHiM"
+	req.Header.Set("Authorization", "Bearer "+stratzToken)
 
-	if err != nil {
-		return nil, err
-	}
+	// define a Context for the request
+	ctx := context.Background()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
+	// run it and capture the response
+	var sb []structs.Match
+	if err := client.Run(ctx, req, &sb); err != nil {
 		return nil, err
-	}
-	sb, err := parseMatch(body)
-	if err != nil {
-		return nil, err
-	}
-	if len(sb) == 0 {
-		return nil, errors.New("OpenDota returned empty match :(")
 	}
 	return sb, nil
 }
@@ -64,7 +65,7 @@ func RetrieveFileWithURL(sb []structs.Match, filename string) error {
 		return err
 	}
 	fmt.Println("Decompressing bzip2 file")
-	app := "lbzip2"
+	app := "bzip2"
 	arg0 := "-d"
 	arg1 := "dem_files/" + filename
 
