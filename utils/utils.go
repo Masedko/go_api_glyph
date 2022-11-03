@@ -43,7 +43,8 @@ func GetMatchStructWithMatchID(match_id string) ([]structs.Match, error) {
 
 	// run it and capture the response
 	var sb []structs.Match
-	if err := client.Run(ctx, req, &sb); err != nil {
+	var graphqlRequest interface{}
+	if err := client.Run(ctx, req, &graphqlRequest); err != nil {
 		return nil, err
 	}
 	return sb, nil
