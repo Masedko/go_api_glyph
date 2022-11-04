@@ -27,7 +27,6 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("1")
 	gameStartTime := 0.0
 	gameCurrentTime := 0.0
 	var glyphs []structs.Glyph
@@ -37,8 +36,10 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 		heroplayers = append(heroplayers, structs.HeroPlayer{})
 	}
 	p.Callbacks.OnCDOTAUserMsg_SpectatorPlayerUnitOrders(func(m *dota.CDOTAUserMsg_SpectatorPlayerUnitOrders) error {
+		fmt.Println("baza")
 		if m.GetOrderType() == int32(dota.DotaunitorderT_DOTA_UNIT_ORDER_GLYPH) {
 			mapEntity := p.FindEntity(m.GetEntindex()).Map()
+			fmt.Println("1")
 			glyph = structs.Glyph{
 				Username:     mapEntity["m_iszPlayerName"].(string),
 				User_steamID: fmt.Sprint(mapEntity["m_steamID"].(uint64)),
@@ -49,6 +50,7 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 				glyphs = append(glyphs, glyph)
 			}
 		}
+		fmt.Println("2")
 		fmt.Println(glyph)
 		return nil
 	})
@@ -56,6 +58,7 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 		if e.GetClassName() == "CDOTAGamerulesProxy" {
 			gameStartTime = float64(e.Get("m_pGameRules.m_flGameStartTime").(float32))
 			gameCurrentTime = float64(e.Get("m_pGameRules.m_fGameTime").(float32))
+			fmt.Println(gameStartTime, gameCurrentTime)
 		}
 		if gameCurrentTime < 1100 && e.GetClassName() == "CDOTA_PlayerResource" {
 			for i := 0; i < 10; i++ {
@@ -63,7 +66,6 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 				heroplayers[i].Hero_ID = e.Get("m_vecPlayerTeamData.000" + strconv.Itoa(i) + ".m_nSelectedHeroID").(int32)
 				intToString := e.Get("m_vecPlayerData.000" + strconv.Itoa(i) + ".m_iPlayerSteamID").(int32)
 				heroplayers[i].Player_ID = fmt.Sprint(intToString)
-
 			}
 		}
 		return nil
