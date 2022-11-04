@@ -55,6 +55,8 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 		if e.GetClassName() == "CDOTAGamerulesProxy" {
 			gameStartTime = e.Get("m_pGameRules.m_flGameStartTime").(float64)
 			gameCurrentTime = e.Get("m_pGameRules.m_fGameTime").(float64)
+			fmt.Println(gameCurrentTime)
+			fmt.Println(gameStartTime)
 		}
 		if gameCurrentTime < 1100 && e.GetClassName() == "CDOTA_PlayerResource" {
 			for i := 0; i < 10; i++ {
