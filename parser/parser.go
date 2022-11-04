@@ -54,15 +54,14 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 	})
 	p.OnEntity(func(e *manta.Entity, op manta.EntityOp) error {
 		if e.GetClassName() == "CDOTAGamerulesProxy" {
-			fmt.Println(reflect.TypeOf(e.Get("m_pGameRules.m_flGameStartTime")))
-			gameStartTime = e.Get("m_pGameRules.m_flGameStartTime").(float64)
-			gameCurrentTime = e.Get("m_pGameRules.m_fGameTime").(float64)
+			gameStartTime = float64(e.Get("m_pGameRules.m_flGameStartTime").(float32))
+			gameCurrentTime = float64(e.Get("m_pGameRules.m_fGameTime").(float32))
 		}
 		if gameCurrentTime < 1100 && e.GetClassName() == "CDOTA_PlayerResource" {
 			for i := 0; i < 10; i++ {
 				fmt.Println(reflect.TypeOf(e.Get("m_vecPlayerTeamData.000" + strconv.Itoa(i) + ".m_nSelectedHeroID")))
-				heroplayers[i].Hero_ID, _ = strconv.ParseInt(fmt.Sprint(e.Map()["m_vecPlayerTeamData.000"+strconv.Itoa(i)+".m_nSelectedHeroID"]), 10, 64)
-				intToString, _ := strconv.ParseInt(fmt.Sprint(e.Map()["m_vecPlayerData.000"+strconv.Itoa(i)+".m_iPlayerSteamID"]), 10, 64)
+				heroplayers[i].Hero_ID = e.Get("m_vecPlayerTeamData.000" + strconv.Itoa(i) + ".m_nSelectedHeroID").(int32)
+				intToString := e.Get("m_vecPlayerData.000" + strconv.Itoa(i) + ".m_iPlayerSteamID").(int32)
 				heroplayers[i].Player_ID = fmt.Sprint(intToString)
 
 			}
