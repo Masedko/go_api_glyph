@@ -25,7 +25,7 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Println("1")
 	gameStartTime := 0.0
 	gameCurrentTime := 0.0
 	var glyphs []structs.Glyph
@@ -34,7 +34,7 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 	for i := 0; i < 10; i++ {
 		heroplayers = append(heroplayers, structs.HeroPlayer{})
 	}
-
+	fmt.Println("2")
 	p.Callbacks.OnCDOTAUserMsg_SpectatorPlayerUnitOrders(func(m *dota.CDOTAUserMsg_SpectatorPlayerUnitOrders) error {
 		if m.GetOrderType() == int32(dota.DotaunitorderT_DOTA_UNIT_ORDER_GLYPH) {
 			mapEntity := p.FindEntity(m.GetEntindex()).Map()
@@ -50,7 +50,7 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 		}
 		return nil
 	})
-
+	fmt.Println("3")
 	p.OnEntity(func(e *manta.Entity, op manta.EntityOp) error {
 		if e.GetClassName() == "CDOTAGamerulesProxy" {
 			gameStartTime = e.Get("m_pGameRules.m_flGameStartTime").(float64)
@@ -68,9 +68,9 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 		}
 		return nil
 	})
-
+	fmt.Println("4")
 	p.Start()
-
+	fmt.Println("5")
 	for k := range glyphs {
 		for l := range heroplayers {
 			if fmt.Sprint(glyphs[k].User_steamID) == fmt.Sprint(heroplayers[l].Player_ID) {
@@ -78,12 +78,12 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 			}
 		}
 	}
-
+	fmt.Println("6")
 	file, _ := json.MarshalIndent(glyphs, "", " ")
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Println("7")
 	write_to := "parsed_matches/" + match_id + ".json"
 	_ = ioutil.WriteFile(write_to, file, 0644)
 
