@@ -10,7 +10,6 @@ require (
 	github.com/swaggest/rest v0.2.30
 	github.com/swaggest/swgui v1.4.5
 	github.com/swaggest/usecase v1.1.3
-	golang.org/x/exp v0.0.0-20220826144839-4cc3b17fd1f1
 )
 
 require (
@@ -19,6 +18,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.7 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
+	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/matryer/is v1.4.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/santhosh-tekuri/jsonschema/v3 v3.1.0 // indirect
