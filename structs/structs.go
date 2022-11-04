@@ -9,7 +9,7 @@ type Glyph struct {
 }
 
 type HeroPlayer struct {
-	Hero_ID   int64
+	Hero_ID   int32
 	Player_ID string
 }
 
