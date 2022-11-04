@@ -8,6 +8,8 @@ import (
 	"os"
 	"strconv"
 
+	"reflect"
+
 	"github.com/Masedko/go_api_glyph/structs"
 	"github.com/dotabuff/manta"
 	"github.com/dotabuff/manta/dota"
@@ -34,7 +36,6 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 	for i := 0; i < 10; i++ {
 		heroplayers = append(heroplayers, structs.HeroPlayer{})
 	}
-	fmt.Println("2")
 	p.Callbacks.OnCDOTAUserMsg_SpectatorPlayerUnitOrders(func(m *dota.CDOTAUserMsg_SpectatorPlayerUnitOrders) error {
 		if m.GetOrderType() == int32(dota.DotaunitorderT_DOTA_UNIT_ORDER_GLYPH) {
 			mapEntity := p.FindEntity(m.GetEntindex()).Map()
@@ -48,18 +49,18 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 				glyphs = append(glyphs, glyph)
 			}
 		}
+		fmt.Println(glyph)
 		return nil
 	})
-	fmt.Println("3")
 	p.OnEntity(func(e *manta.Entity, op manta.EntityOp) error {
 		if e.GetClassName() == "CDOTAGamerulesProxy" {
+			fmt.Println(reflect.TypeOf(e.Get("m_pGameRules.m_flGameStartTime")))
 			gameStartTime = e.Get("m_pGameRules.m_flGameStartTime").(float64)
 			gameCurrentTime = e.Get("m_pGameRules.m_fGameTime").(float64)
-			fmt.Println(gameCurrentTime)
-			fmt.Println(gameStartTime)
 		}
 		if gameCurrentTime < 1100 && e.GetClassName() == "CDOTA_PlayerResource" {
 			for i := 0; i < 10; i++ {
+				fmt.Println(reflect.TypeOf(e.Get("m_vecPlayerTeamData.000" + strconv.Itoa(i) + ".m_nSelectedHeroID")))
 				heroplayers[i].Hero_ID, _ = strconv.ParseInt(fmt.Sprint(e.Map()["m_vecPlayerTeamData.000"+strconv.Itoa(i)+".m_nSelectedHeroID"]), 10, 64)
 				intToString, _ := strconv.ParseInt(fmt.Sprint(e.Map()["m_vecPlayerData.000"+strconv.Itoa(i)+".m_iPlayerSteamID"]), 10, 64)
 				heroplayers[i].Player_ID = fmt.Sprint(intToString)
@@ -68,9 +69,7 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 		}
 		return nil
 	})
-	fmt.Println("4")
 	p.Start()
-	fmt.Println("5")
 	for k := range glyphs {
 		for l := range heroplayers {
 			if fmt.Sprint(glyphs[k].User_steamID) == fmt.Sprint(heroplayers[l].Player_ID) {
@@ -78,12 +77,10 @@ func ParseDemo(filename string, match_id string) ([]structs.Glyph, error) {
 			}
 		}
 	}
-	fmt.Println("6")
 	file, _ := json.MarshalIndent(glyphs, "", " ")
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("7")
 	write_to := "parsed_matches/" + match_id + ".json"
 	_ = ioutil.WriteFile(write_to, file, 0644)
 
