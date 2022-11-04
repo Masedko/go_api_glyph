@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strconv"
 
 	"github.com/Masedko/go_api_glyph/structs"
 	"github.com/machinebox/graphql"
@@ -26,28 +27,38 @@ func parseMatch(jsonBuffer []byte) ([]structs.Match, error) {
 }
 
 func GetMatchStructWithMatchID(match_id string) ([]structs.Match, error) {
-	client := graphql.NewClient("https://api.stratz.com/graphql/")
+	client := graphql.NewClient("https://api.stratz.com/graphql")
 	req := graphql.NewRequest(`
-    query ($key: Long!) {
-        match(id:$key) {
-            replaySalt,
-            clusterId
-        }
-    }`)
+    query($key: Long!) {
+		match(id: $key) {
+		  replaySalt
+		  clusterId
+		}
+	}`)
+	req.Var("key", match_id)
 	// set any variables
-	stratzToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJodHRwczovL3N0ZWFtY29tbXVuaXR5LmNvbS9vcGVuaWQvaWQvNzY1NjExOTgzMzQwMzE4MTQiLCJ1bmlxdWVfbmFtZSI6ItCS0L4g0YHQu9Cw0LLRgyDQv9C70LXRgtC4ISIsIlN1YmplY3QiOiJiOTFjNDAxNy1iYzQwLTQ4NTMtOGJiMC03YmZkNzgyNTU1MDYiLCJTdGVhbUlkIjoiMzczNzY2MDg2IiwibmJmIjoxNjQzNTAwMjg2LCJleHAiOjE2NzUwMzYyODYsImlhdCI6MTY0MzUwMDI4NiwiaXNzIjoiaHR0cHM6Ly9hcGkuc3RyYXR6LmNvbSJ9.FPtVZnsflLsNMhM7VtL9qJkB6B9SwOpaWAJFII-jHiM"
-	req.Header.Set("Authorization", "Bearer "+stratzToken)
+	stratzToken := "Bearer " + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJodHRwczovL3N0ZWFtY29tbXVuaXR5LmNvbS9vcGVuaWQvaWQvNzY1NjExOTgzMzQwMzE4MTQiLCJ1bmlxdWVfbmFtZSI6ItCS0L4g0YHQu9Cw0LLRgyDQv9C70LXRgtC4ISIsIlN1YmplY3QiOiJiOTFjNDAxNy1iYzQwLTQ4NTMtOGJiMC03YmZkNzgyNTU1MDYiLCJTdGVhbUlkIjoiMzczNzY2MDg2IiwibmJmIjoxNjQzNTAwMjg2LCJleHAiOjE2NzUwMzYyODYsImlhdCI6MTY0MzUwMDI4NiwiaXNzIjoiaHR0cHM6Ly9hcGkuc3RyYXR6LmNvbSJ9.FPtVZnsflLsNMhM7VtL9qJkB6B9SwOpaWAJFII-jHiM"
+	req.Header.Set("Authorization", stratzToken)
 
 	// define a Context for the request
 	ctx := context.Background()
 
 	// run it and capture the response
-	var sb []structs.Match
-	var graphqlRequest interface{}
+	graphqlRequest := make(map[string]map[string]int)
 	if err := client.Run(ctx, req, &graphqlRequest); err != nil {
 		return nil, err
 	}
-	fmt.Println(graphqlRequest)
+	matchId, err := strconv.Atoi(match_id)
+	if err != nil {
+		return nil, err
+	}
+	sb := []structs.Match{}
+	match := structs.Match{
+		Match_id:    matchId,
+		Cluster:     graphqlRequest["match"]["clusterId"],
+		Replay_salt: graphqlRequest["match"]["replaySalt"]}
+	sb = append(sb, match)
+	fmt.Println(sb)
 	return sb, nil
 }
 
