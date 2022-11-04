@@ -64,6 +64,7 @@ func GetMatchStructWithMatchID(match_id string) ([]structs.Match, error) {
 
 func RetrieveFileWithURL(sb []structs.Match, filename string) error {
 	URL_demo := fmt.Sprintf("http://replay%d.valve.net/570/%d_%d.dem.bz2", sb[0].Cluster, sb[0].Match_id, sb[0].Replay_salt)
+	fmt.Println(URL_demo)
 	ctx := context.Background()
 
 	dl := got.NewDownload(ctx, URL_demo, "dem_files/"+filename)
