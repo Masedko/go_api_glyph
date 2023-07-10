@@ -1,5 +1,4 @@
-# Go REST API Glyph
-
+# Go REST API Glyph. THIS IS OLD PROJECT. [NEW VERSION](https://github.com/Masedko/glyph)
 This Go REST API for Dota 2 created with idea to get all glyph usages and information about user in simple JSON format
 
 ## Install
